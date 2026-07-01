@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Read the Room — pose classifier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,500&family=Space+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --backdrop:#1B1720;
+    --surface:#241F2B;
+    --surface-2:#2D2735;
+    --line:#3A3244;
+    --ink:#EFE9F5;
+    --ink-soft:#B8AFC7;
+    --ink-faint:#7E7590;
+    --grin:#F5B942;
+    --grin-dim:#5A4A2A;
+    --gasp:#FF5D73;
+    --gasp-dim:#4A2A31;
+    --wire:#6F8FA8;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 15% -10%, #2A2333 0%, transparent 60%),
+      radial-gradient(1000px 700px at 110% 30%, #251E2C 0%, transparent 55%),
+      var(--backdrop);
+    color:var(--ink);
+    font-family:'Space Grotesk', sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{
+    max-width:980px;
+    margin:0 auto;
+    padding:56px 24px 80px;
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:18px;
+  }
+  .eyebrow::before{
+    content:"";
+    width:7px;height:7px;border-radius:50%;
+    background:var(--wire);
+    box-shadow:0 0 0 3px rgba(111,143,168,0.18);
+  }
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    font-size:clamp(38px, 6vw, 64px);
+    line-height:1.02;
+    margin:0 0 14px;
+    letter-spacing:-0.01em;
+  }
+  h1 em{
+    font-style:italic;
+    font-weight:500;
+    color:var(--grin);
+  }
+  .lede{
+    font-size:16px;
+    color:var(--ink-soft);
+    max-width:52ch;
+    line-height:1.55;
+    margin:0 0 44px;
+  }
+  .lede code{
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;
+    background:var(--surface-2);
+    padding:2px 6px;
+    border-radius:4px;
+    color:var(--ink);
+  }
+
+  .stage{
+    display:grid;
+    grid-template-columns:1fr 260px;
+    gap:20px;
+    align-items:stretch;
+  }
+  @media (max-width:720px){
+    .stage{grid-template-columns:1fr;}
+  }
+
+  .camera-card{
+    position:relative;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:18px;
+    overflow:hidden;
+    aspect-ratio:4/3;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .camera-card canvas{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+  }
+  #overlay{ z-index:2; pointer-events:none; }
+
+  .placeholder{
+    position:relative;
+    z-index:3;
+    text-align:center;
+    padding:28px;
+  }
+  .placeholder p{
+    font-size:13px;
+    color:var(--ink-faint);
+    max-width:30ch;
+    margin:14px auto 22px;
+    line-height:1.5;
+  }
+  .go-btn{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:14px;
+    letter-spacing:0.01em;
+    color:var(--backdrop);
+    background:var(--grin);
+    border:none;
+    padding:13px 26px;
+    border-radius:999px;
+    cursor:pointer;
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow:0 0 0 0 rgba(245,185,66,0.5);
+  }
+  .go-btn:hover{ transform:translateY(-1px); box-shadow:0 6px 18px -6px rgba(245,185,66,0.55); }
+  .go-btn:active{ transform:translateY(0); }
+  .go-btn:focus-visible{ outline:2px solid var(--ink); outline-offset:3px; }
+  .go-btn[disabled]{ opacity:0.5; cursor:progress; }
+
+  .ring{
+    width:56px;height:56px;
+    margin:0 auto;
+    border-radius:50%;
+    border:1.5px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--ink-faint);
+  }
+
+  .status-chip{
+    position:absolute;
+    top:14px; left:14px;
+    z-index:4;
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.06em;
+    padding:6px 10px;
+    border-radius:999px;
+    background:rgba(27,23,32,0.7);
+    backdrop-filter:blur(6px);
+    color:var(--ink-soft);
+    display:none;
+  }
+  .status-chip.show{ display:block; }
+
+  /* Gauges */
+  .gauges{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  .gauge{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:18px 18px 16px;
+    position:relative;
+    overflow:hidden;
+  }
+  .gauge-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:12px;
+  }
+  .gauge-label{
+    font-family:'Fraunces', serif;
+    font-style:italic;
+    font-size:19px;
+  }
+  .gauge-pct{
+    font-family:'JetBrains Mono', monospace;
+    font-size:20px;
+    font-weight:500;
+  }
+  .gauge-track{
+    height:10px;
+    border-radius:999px;
+    background:var(--surface-2);
+    overflow:hidden;
+  }
+  .gauge-fill{
+    height:100%;
+    width:0%;
+    border-radius:999px;
+    transition:width 0.18s ease-out;
+  }
+  .g-smile .gauge-pct{ color:var(--grin); }
+  .g-smile .gauge-fill{ background:linear-gradient(90deg, var(--grin-dim), var(--grin)); }
+  .g-surprise .gauge-pct{ color:var(--gasp); }
+  .g-surprise .gauge-fill{ background:linear-gradient(90deg, var(--gasp-dim), var(--gasp)); }
+
+  .gauge.leading{
+    border-color:currentColor;
+  }
+  .g-smile.leading{ box-shadow:0 0 0 1px var(--grin) inset, 0 0 24px -10px var(--grin); }
+  .g-surprise.leading{ box-shadow:0 0 0 1px var(--gasp) inset, 0 0 24px -10px var(--gasp); }
+
+  .verdict-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:18px;
+    text-align:center;
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    min-height:80px;
+  }
+  .verdict-eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:10px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    margin-bottom:6px;
+  }
+  .verdict-word{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:24px;
+    color:var(--ink-faint);
+    transition:color 0.2s ease;
+  }
+
+  footer{
+    margin-top:36px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:11.5px;
+    color:var(--ink-faint);
+    line-height:1.7;
+    border-top:1px solid var(--line);
+    padding-top:18px;
+  }
+  footer a{ color:var(--wire); }
+
+  .err{
+    display:none;
+    margin-top:14px;
+    font-size:13px;
+    color:var(--gasp);
+    background:var(--gasp-dim);
+    border:1px solid var(--gasp);
+    border-radius:10px;
+    padding:12px 14px;
+    line-height:1.5;
+  }
+  .err.show{ display:block; }
+
+  @media (prefers-reduced-motion: reduce){
+    .gauge-fill, .go-btn{ transition:none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow">teachablemachine · posenet classifier</div>
+  <h1>Read the<br><em>room.</em></h1>
+  <p class="lede">
+    This page loads your exported Teachable Machine pose model —
+    <code>model.json</code>, <code>metadata.json</code>, <code>weights.bin</code> —
+    runs PoseNet on your webcam feed, and classifies each frame as
+    <strong style="color:var(--grin); font-style:normal;">smile</strong> or
+    <strong style="color:var(--gasp); font-style:normal;">Surprise</strong> in real time.
+  </p>
+
+  <div class="stage">
+    <div class="camera-card" id="cameraCard">
+      <canvas id="overlay"></canvas>
+      <div class="placeholder" id="placeholder">
+        <div class="ring">◎</div>
+        <p>Nothing's watching yet. Start the camera to begin reading expressions live.</p>
+        <button class="go-btn" id="startBtn">Start camera</button>
+      </div>
+      <div class="status-chip" id="statusChip">loading model…</div>
+    </div>
+
+    <div class="gauges">
+      <div class="gauge g-smile" id="gaugeSmile">
+        <div class="gauge-head">
+          <span class="gauge-label">smile</span>
+          <span class="gauge-pct" id="pctSmile">0%</span>
+        </div>
+        <div class="gauge-track"><div class="gauge-fill" id="fillSmile"></div></div>
+      </div>
+      <div class="gauge g-surprise" id="gaugeSurprise">
+        <div class="gauge-head">
+          <span class="gauge-label">Surprise</span>
+          <span class="gauge-pct" id="pctSurprise">0%</span>
+        </div>
+        <div class="gauge-track"><div class="gauge-fill" id="fillSurprise"></div></div>
+      </div>
+      <div class="verdict-card">
+        <div class="verdict-eyebrow">reading</div>
+        <div class="verdict-word" id="verdictWord">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="err" id="errBox"></div>
+
+  <footer>
+    model: my-pose-model · posenet mobilenet v1 (0.75, 257px, stride 16)<br>
+    files expected next to this page: model.json · metadata.json · weights.bin<br>
+    served over a local http server (webcam access requires http/https, not file://)
+  </footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/pose@0.8/dist/teachablemachine-pose.min.js"></script>
+
+<script>
+(function(){
+  const MODEL_URL = "./model.json";
+  const METADATA_URL = "./metadata.json";
+
+  const startBtn = document.getElementById('startBtn');
+  const placeholder = document.getElementById('placeholder');
+  const statusChip = document.getElementById('statusChip');
+  const cameraCard = document.getElementById('cameraCard');
+  const overlay = document.getElementById('overlay');
+  const errBox = document.getElementById('errBox');
+
+  const fillSmile = document.getElementById('fillSmile');
+  const fillSurprise = document.getElementById('fillSurprise');
+  const pctSmile = document.getElementById('pctSmile');
+  const pctSurprise = document.getElementById('pctSurprise');
+  const gaugeSmile = document.getElementById('gaugeSmile');
+  const gaugeSurprise = document.getElementById('gaugeSurprise');
+  const verdictWord = document.getElementById('verdictWord');
+
+  let model, webcam, ctx, rafId;
+  let ready = false;
+
+  function showError(msg){
+    errBox.textContent = msg;
+    errBox.classList.add('show');
+  }
+
+  function setStatus(text, visible){
+    statusChip.textContent = text;
+    statusChip.classList.toggle('show', !!visible);
+  }
+
+  async function loadModel(){
+    setStatus('loading model…', true);
+    model = await tmPose.load(MODEL_URL, METADATA_URL);
+  }
+
+  async function startCamera(){
+    startBtn.disabled = true;
+    startBtn.textContent = 'Starting…';
+    try {
+      if (!model){
+        await loadModel();
+      }
+
+      const size = 320;
+      const flip = true;
+      webcam = new tmPose.Webcam(size, size, flip);
+      await webcam.setup();
+      await webcam.play();
+
+      overlay.width = size;
+      overlay.height = size;
+      ctx = overlay.getContext('2d');
+
+      placeholder.style.display = 'none';
+      setStatus('live', true);
+
+      rafId = requestAnimationFrame(loop);
+    } catch (err){
+      console.error(err);
+      startBtn.disabled = false;
+      startBtn.textContent = 'Start camera';
+      setStatus('', false);
+      if (err && err.name === 'NotAllowedError'){
+        showError('Camera access was blocked. Allow camera permissions for this page and try again.');
+      } else if (err && /model\.json|metadata\.json|fetch/i.test(String(err.message))){
+        showError('Could not load the model files. Make sure model.json, metadata.json, and weights.bin sit next to this HTML file, and that you\'re serving it via a local server (e.g. "python3 -m http.server").');
+      } else {
+        showError('Something went wrong starting the camera: ' + (err && err.message ? err.message : err));
+      }
+    }
+  }
+
+  async function loop(){
+    webcam.update();
+    await predict();
+    drawFrame();
+    rafId = requestAnimationFrame(loop);
+  }
+
+  async function predict(){
+    const { pose, posenetOutput } = await model.estimatePose(webcam.canvas);
+    const predictions = await model.predict(posenetOutput);
+
+    let smileScore = 0, surpriseScore = 0;
+    predictions.forEach(p => {
+      const label = p.className.toLowerCase();
+      if (label === 'smile') smileScore = p.probability;
+      if (label === 'surprise') surpriseScore = p.probability;
+    });
+
+    const sPct = Math.round(smileScore * 100);
+    const rPct = Math.round(surpriseScore * 100);
+
+    fillSmile.style.width = sPct + '%';
+    fillSurprise.style.width = rPct + '%';
+    pctSmile.textContent = sPct + '%';
+    pctSurprise.textContent = rPct + '%';
+
+    const leadingSmile = smileScore >= surpriseScore;
+    gaugeSmile.classList.toggle('leading', leadingSmile);
+    gaugeSurprise.classList.toggle('leading', !leadingSmile);
+
+    verdictWord.textContent = leadingSmile ? 'smiling' : 'surprised';
+    verdictWord.style.color = leadingSmile ? 'var(--grin)' : 'var(--gasp)';
+
+    lastPose = pose;
+  }
+
+  let lastPose = null;
+
+  function drawFrame(){
+    ctx.clearRect(0, 0, overlay.width, overlay.height);
+    ctx.drawImage(webcam.canvas, 0, 0);
+    if (!lastPose) return;
+
+    const wireColor = getComputedStyle(document.documentElement).getPropertyValue('--wire').trim();
+    tmPose.drawKeypoints(lastPose.keypoints, 0.5, ctx);
+    tmPose.drawSkeleton(lastPose.keypoints, 0.5, ctx, 2, wireColor);
+  }
+
+  startBtn.addEventListener('click', startCamera);
+
+  window.addEventListener('beforeunload', () => {
+    if (rafId) cancelAnimationFrame(rafId);
+    if (webcam) webcam.stop();
+  });
+})();
+</script>
+</body>
+</html>
