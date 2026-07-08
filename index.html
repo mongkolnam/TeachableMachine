@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PlamaAI - Advancing AI Thinking & Solutions</title>
+
+    <style>
+        /* ---------- RESET & BASE ---------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0e1a;
+            color: #e0e6f0;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ---------- ANIMATED BACKGROUND ---------- */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle at 20% 50%, #1a2a4a, #0a0e1a 70%);
+            overflow: hidden;
+        }
+
+        .bg-animation::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 70% 30%, rgba(0, 180, 255, 0.05), transparent 50%),
+                radial-gradient(circle at 30% 70%, rgba(120, 80, 255, 0.05), transparent 50%);
+            animation: rotateBg 30s linear infinite;
+        }
+
+        @keyframes rotateBg {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Floating particles */
+        .particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(0, 180, 255, 0.3);
+            border-radius: 50%;
+            animation: floatParticle linear infinite;
+        }
+
+        @keyframes floatParticle {
+            0% {
+                transform: translateY(100vh) scale(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-10vh) scale(1);
+                opacity: 0;
+            }
+        }
+
+        /* ---------- CONTAINER ---------- */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ---------- HEADER / NAV ---------- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            flex-wrap: wrap;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo-area img {
+            height: 60px;
+            width: auto;
+            border-radius: 12px;
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+            cursor: pointer;
+        }
+
+        .logo-area img:hover {
+            transform: scale(1.05) rotate(-2deg);
+            box-shadow: 0 0 30px rgba(0, 180, 255, 0.3);
+        }
+
+        .logo-area h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00b4ff, #7c4dff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+
+        nav {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        nav a {
+            color: #a0b0c8;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1rem;
+            transition: color 0.3s, transform 0.3s;
+            position: relative;
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #00b4ff, #7c4dff);
+            transition: width 0.3s ease;
+        }
+
+        nav a:hover {
+            color: #ffffff;
+            transform: translateY(-2px);
+        }
+
+        nav a:hover::after {
+            width: 100%;
+        }
+
+        /* ---------- HERO SECTION ---------- */
+        .hero {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 70vh;
+            text-align: center;
+            padding: 60px 0;
+        }
+
+        .hero h2 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #ffffff, #7c4dff, #00b4ff);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 4s ease-in-out infinite;
+        }
+
+        @keyframes gradientShift {
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            color: #b0c0d8;
+            margin-bottom: 40px;
+        }
+
+        .hero .tagline {
+            font-size: 1.1rem;
+            color: #7c4dff;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        /* ---------- BUTTONS ---------- */
+        .btn-group {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 14px 36px;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00b4ff, #7c4dff);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(0, 180, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 40px rgba(0, 180, 255, 0.5);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #e0e6f0;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            border-color: #00b4ff;
+            background: rgba(0, 180, 255, 0.1);
+            transform: translateY(-3px);
+        }
+
+        /* ---------- FEATURES / CARDS ---------- */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            padding: 80px 0;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            transition: all 0.4s ease;
+            cursor: default;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(0, 180, 255, 0.05), rgba(124, 77, 255, 0.05));
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(0, 180, 255, 0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card .icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .card h3 {
+            font-size: 1.4rem;
+            margin-bottom: 12px;
+            position: relative;
+        }
+
+        .card p {
+            color: #a0b0c8;
+            font-size: 0.95rem;
+            position: relative;
+        }
+
+        /* ---------- COUNTER (Dynamic JS) ---------- */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 30px;
+            padding: 60px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            margin: 20px 0;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-item .number {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #00b4ff, #7c4dff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-item .label {
+            color: #8090a8;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 5px;
+        }
+
+        /* ---------- FOOTER ---------- */
+        footer {
+            padding: 40px 0;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            color: #607080;
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: #7c4dff;
+            text-decoration: none;
+        }
+
+        /* ---------- RESPONSIVE ---------- */
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 16px;
+                align-items: flex-start;
+            }
+
+            nav {
+                flex-wrap: wrap;
+                gap: 16px;
+            }
+
+            .hero h2 {
+                font-size: 2.2rem;
+            }
+
+            .btn-group {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 300px;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo-area h1 {
+                font-size: 1.2rem;
+            }
+
+            .logo-area img {
+                height: 40px;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== ANIMATED BACKGROUND ===== -->
+    <div class="bg-animation">
+        <div class="particles" id="particles"></div>
+    </div>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div class="container">
+
+        <!-- ===== HEADER ===== -->
+        <header>
+            <div class="logo-area">
+                <!-- 
+                    ⚠️ IMPORTANT: 
+                    Place your 'plamaAI_logo01.jpg' in the SAME folder as this HTML file.
+                    If the file is elsewhere, update the 'src' path accordingly.
+                -->
+                <img src="plamaAI_logo01.jpg" alt="PlamaAI Logo" id="logo" />
+                <h1>Plama<span style="-webkit-text-fill-color:#7c4dff;">AI</span></h1>
+            </div>
+            <nav>
+                <a href="#">Home</a>
+                <a href="#">Solutions</a>
+                <a href="#">Research</a>
+                <a href="#">About</a>
+                <a href="#" class="btn btn-primary" style="padding:8px 24px; font-size:0.85rem;">Contact</a>
+            </nav>
+        </header>
+
+        <!-- ===== HERO ===== -->
+        <section class="hero">
+            <span class="tagline">⚡ Advancing AI Thinking &amp; Solutions</span>
+            <h2>Intelligence. <br />Reimagined.</h2>
+            <p>
+                PlamaAI is at the forefront of next-generation artificial intelligence —
+                building systems that think deeper, learn faster, and solve the world's
+                most complex challenges.
+            </p>
+            <div class="btn-group">
+                <a href="#" class="btn btn-primary">Explore Our Work</a>
+                <a href="#" class="btn btn-secondary">View Research</a>
+            </div>
+        </section>
+
+        <!-- ===== FEATURES ===== -->
+        <div class="features">
+            <div class="card">
+                <span class="icon">🧠</span>
+                <h3>Deep Reasoning</h3>
+                <p>Beyond pattern matching — our models reason through complex problems with human-like logic and transparency.</p>
+            </div>
+            <div class="card">
+                <span class="icon">⚡</span>
+                <h3>Real-Time Adaptation</h3>
+                <p>AI that evolves on the fly. PlamaAI systems learn from new data instantly, without costly retraining cycles.</p>
+            </div>
+            <div class="card">
+                <span class="icon">🔒</span>
+                <h3>Ethical by Design</h3>
+                <p>Privacy-first, bias-audited, and explainable. We build AI that earns trust through accountability.</p>
+            </div>
+            <div class="card">
+                <span class="icon">🌍</span>
+                <h3>Global Scale</h3>
+                <p>From edge devices to the cloud, our solutions deploy anywhere — bringing intelligence to every corner of the world.</p>
+            </div>
+        </div>
+
+        <!-- ===== STATS (Dynamic JavaScript) ===== -->
+        <div class="stats" id="statsSection">
+            <div class="stat-item">
+                <div class="number" id="stat1">0</div>
+                <div class="label">Models Deployed</div>
+            </div>
+            <div class="stat-item">
+                <div class="number" id="stat2">0</div>
+                <div class="label">Research Papers</div>
+            </div>
+            <div class="stat-item">
+                <div class="number" id="stat3">0</div>
+                <div class="label">Active Clients</div>
+            </div>
+            <div class="stat-item">
+                <div class="number" id="stat4">0</div>
+                <div class="label">Countries</div>
+            </div>
+        </div>
+
+        <!-- ===== FOOTER ===== -->
+        <footer>
+            &copy; 2026 <strong>PlamaAI</strong> — Advancing AI Thinking &amp; Solutions.
+            Built with ❤️ for the future of intelligence.
+            <br />
+            <span style="font-size:0.8rem; color:#405060;">
+                IEEE-ICIIBMS 2027 — We wish you every success.
+            </span>
+        </footer>
+
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- ===== JAVASCRIPT ===== -->
+    <!-- ============================================================ -->
+    <script>
+        (function() {
+            'use strict';
+
+            // ---------- 1. PARTICLES (Dynamic Background) ----------
+            function createParticles() {
+                const container = document.getElementById('particles');
+                if (!container) return;
+                const count = 50;
+
+                for (let i = 0; i < count; i++) {
+                    const particle = document.createElement('div');
+                    particle.classList.add('particle');
+                    const size = Math.random() * 4 + 2;
+                    particle.style.width = size + 'px';
+                    particle.style.height = size + 'px';
+                    particle.style.left = Math.random() * 100 + '%';
+                    particle.style.animationDuration = (Math.random() * 20 + 10) + 's';
+                    particle.style.animationDelay = (Math.random() * 15) + 's';
+                    particle.style.opacity = Math.random() * 0.5 + 0.1;
+                    container.appendChild(particle);
+                }
+            }
+            createParticles();
+
+            // ---------- 2. INTERACTIVE LOGO (Click & Haptic) ----------
+            const logo = document.getElementById('logo');
+            if (logo) {
+                logo.addEventListener('click', function() {
+                    this.style.transform = 'scale(0.9) rotate(-5deg)';
+                    setTimeout(() => {
+                        this.style.transform = 'scale(1.05) rotate(-2deg)';
+                    }, 150);
+                    setTimeout(() => {
+                        this.style.transform = 'scale(1) rotate(0deg)';
+                    }, 400);
+
+                    // Show a friendly alert (optional)
+                    // alert('🧠 PlamaAI — Thinking beyond the ordinary.');
+                });
+
+                // Double-click to toggle a "glow" effect
+                logo.addEventListener('dblclick', function() {
+                    this.style.boxShadow = this.style.boxShadow ?
+                        'none' :
+                        '0 0 60px rgba(0, 180, 255, 0.6), 0 0 120px rgba(124, 77, 255, 0.3)';
+                });
+            }
+
+            // ---------- 3. ANIMATED COUNTER (On Scroll) ----------
+            const statIds = ['stat1', 'stat2', 'stat3', 'stat4'];
+            const targetValues = [1247, 89, 312, 42]; // Example numbers
+            let countersAnimated = false;
+
+            function animateCounters() {
+                if (countersAnimated) return;
+
+                const section = document.getElementById('statsSection');
+                if (!section) return;
+
+                const rect = section.getBoundingClientRect();
+                const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
+
+                if (!isVisible) return;
+
+                countersAnimated = true;
+
+                statIds.forEach((id, index) => {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    const target = targetValues[index] || 0;
+                    let current = 0;
+                    const increment = Math.ceil(target / 60);
+                    const stepTime = 20; // ms
+
+                    const timer = setInterval(() => {
+                        current += increment;
+                        if (current >= target) {
+                            current = target;
+                            clearInterval(timer);
+                        }
+                        el.textContent = current.toLocaleString();
+                    }, stepTime);
+                });
+            }
+
+            // Check on scroll and load
+            window.addEventListener('scroll', animateCounters);
+            window.addEventListener('load', function() {
+                // Small delay to ensure layout is complete
+                setTimeout(animateCounters, 400);
+            });
+
+            // ---------- 4. CONSOLE EASTER EGG (Fun) ----------
+            console.log('%c🧠 PlamaAI', 'font-size:24px; font-weight:bold; color:#7c4dff;');
+            console.log('%cAdvancing AI Thinking & Solutions', 'font-size:14px; color:#00b4ff;');
+            console.log('%c⚡ Ready for the future.', 'font-size:12px; color:#8090a8;');
+
+            // ---------- 5. DYNAMIC YEAR IN FOOTER ----------
+            const footer = document.querySelector('footer');
+            if (footer) {
+                const yearSpan = document.createElement('span');
+                // We'll just update the existing text via regex? Simpler:
+                footer.innerHTML = footer.innerHTML.replace(
+                    '2026',
+                    new Date().getFullYear()
+                );
+            }
+
+            // ---------- 6. KEYBOARD SHORTCUT (Easter Egg) ----------
+            document.addEventListener('keydown', function(e) {
+                // Press 'P' + 'A' quickly to toggle dark/light (just for fun)
+                // Not implemented fully, but a nice touch.
+                if (e.key === 'p' || e.key === 'P') {
+                    document.body.style.transition = 'background 0.5s';
+                    document.body.style.background = document.body.style.background === '#0a0e1a' ?
+                        '#1a1a2e' : '#0a0e1a';
+                }
+            });
+
+            console.log('💡 Tip: Press "P" for a quick background toggle!');
+
+        })();
+    </script>
+
+</body>
+</html>
